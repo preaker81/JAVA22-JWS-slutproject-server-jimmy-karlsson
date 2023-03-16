@@ -6,64 +6,69 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
-    public static void main(String[] args) {
-        // Declare and initialize socket, input/output streams, buffered readers/writers, and server socket
-        Socket socket = null;
-        InputStreamReader inputStreamReader = null;
-        OutputStreamWriter outputStreamWriter = null;
-        BufferedReader bufferedReader = null;
-        BufferedWriter bufferedWriter = null;
-        ServerSocket serverSocket = null;
 
+    public static void main(String[] args) {
+        ServerSocket serverSocket = null;
         try {
-            // Create a new server socket with the specified port number
-            serverSocket = new ServerSocket(4321);
+            // Create a new server socket that listens on port 10000
+            serverSocket = new ServerSocket(10000);
         } catch (Exception e) {
-            // Print any exceptions that occur while creating the server socket
             System.out.println(e);
             return;
         }
 
-        // Loop forever, waiting for clients to connect
         while (true) {
-            try {
-                // Wait for a client to connect and accept the connection
-                socket = serverSocket.accept();
-
-                // Initialize input and output streams to read and write data from/to the client
-                inputStreamReader = new InputStreamReader(socket.getInputStream());
-                outputStreamWriter = new OutputStreamWriter(socket.getOutputStream());
-                // Create buffered readers/writers to read and write data from/to the client
-                bufferedReader = new BufferedReader(inputStreamReader);
-                bufferedWriter = new BufferedWriter(outputStreamWriter);
-
-                // Loop until the client sends "quit"
-                while (true) {
-                    // Read the client's message and print it to the console
-                    String message = bufferedReader.readLine();
-                    System.out.println("Client: " + message);
-
-                    // Send a response to the client
-                    bufferedWriter.write("Message received.");
-                    bufferedWriter.newLine();
-                    bufferedWriter.flush();
-
-                    // If the client sends "quit", exit the loop
-                    if (message.equalsIgnoreCase("quit")) {
+            try (
+                    // Accept a new client connection
+                    Socket socket = serverSocket.accept();
+                    // Create a buffered reader to read the client input
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    // Create a buffered writer to write the server response
+                    BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))
+            ) {
+                // Read the request headers
+                String inputLine;
+                StringBuilder requestBody = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    // Stop reading headers when an empty line is encountered
+                    if (inputLine.isEmpty()) {
                         break;
                     }
                 }
-
-                // Close the socket and all open resources
-                socket.close();
-                inputStreamReader.close();
-                outputStreamWriter.close();
-                bufferedReader.close();
-                bufferedWriter.close();
+                // Read the request body, if any
+                while ((inputLine = in.readLine()) != null) {
+                    requestBody.append(inputLine);
+                }
+                // Determine the request method
+                String method = "GET";
+                if (requestBody.length() > 0) {
+                    method = "POST";
+                }
+                // Call the handleRequest method to generate a response
+                String response = handleRequest(method, requestBody.toString());
+                // Send the response back to the client
+                out.write("HTTP/1.1 200 OK\r\n");
+                out.write("Content-Type: application/json\r\n");
+                out.write("Content-Length: " + response.length() + "\r\n");
+                out.write("\r\n");
+                out.write(response);
+                out.flush();
             } catch (Exception e) {
-                // Print any exceptions that occur while communicating with the client
                 System.out.println(e);
             }
+        }
+    }
+
+    private static String handleRequest(String method, String requestBody) {
+        if (method.equalsIgnoreCase("GET")) {
+            // Handle GET request
+            return "{\"message\": \"GET request received\"}";
+        } else if (method.equalsIgnoreCase("POST")) {
+            // Handle POST request
+            return "{\"message\": \"POST request received\", \"data\": " + requestBody + "}";
+        } else {
+            // Invalid request method
+            return "{\"error\": \"Invalid method\"}";
         }
     }
 }

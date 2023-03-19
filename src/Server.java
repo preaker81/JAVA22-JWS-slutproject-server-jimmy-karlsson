@@ -14,7 +14,7 @@ public class Server {
 
         // Create a new server socket and bind it to port 8080
         try {
-            serverSocket = new ServerSocket(8080);
+            serverSocket = new ServerSocket(10000);
         } catch (Exception e) {
             System.out.println(e);
             return;

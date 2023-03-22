@@ -1,6 +1,9 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -25,6 +28,7 @@ public class Server {
             try {
                 // Accept a new incoming connection and create a socket
                 Socket socket = serverSocket.accept();
+                System.out.println("Client connected successfully!");
 
                 // Set up input and output streams for the socket
                 InputStreamReader inputStreamReader = new InputStreamReader(socket.getInputStream());
@@ -39,6 +43,7 @@ public class Server {
                 while (keepAlive) {
                     // Read the request line
                     String requestLine = bufferedReader.readLine();
+                    System.out.println("Client request: " + requestLine);
 
                     // If the request line is null, break the loop
                     if (requestLine == null) {
@@ -73,13 +78,20 @@ public class Server {
                         JSONParser parser = new JSONParser();
                         JSONArray jsonArray = (JSONArray) parser.parse(new FileReader(filepath));
 
-                        // Filter pets by species if requested
-                        if (requestLine.contains("/pets?species=")) {
-                            String species = requestLine.split("species=")[1].split(" ")[0];
+                        // Filter books by title if requested
+                        if (requestLine.contains("/book?title=")) {
+
+                            String title = requestLine.split("title=", 2)[1].split(" ", 2)[0];
+
+                            String decodeedTitle = decodeValue(title);
+
+                            System.out.println("sout title: " + title);
+                            System.out.println("sout decoded title: " + decodeedTitle);
+
                             JSONArray filteredArray = new JSONArray();
                             for (Object obj : jsonArray) {
                                 JSONObject jsonObject = (JSONObject) obj;
-                                if (species.equalsIgnoreCase((String) jsonObject.get("species"))) {
+                                if (decodeedTitle.equalsIgnoreCase((String) jsonObject.get("title"))) {
                                     filteredArray.add(jsonObject);
                                 }
                             }
@@ -88,6 +100,7 @@ public class Server {
 
                         // Prepare and send the response
                         String response = jsonArray.toJSONString();
+                        System.out.println(response);
                         bufferedWriter.write("HTTP/1.1 200 OK\r\n");
                         bufferedWriter.write("Content-Type: application/json\r\n");
                         bufferedWriter.write("Content-Length: " + response.length() + "\r\n");
@@ -97,6 +110,7 @@ public class Server {
                     }
                     // Handle POST requests
                     else if (requestLine.startsWith("POST")) {
+
                         StringBuilder payloadBuilder = new StringBuilder();
                         // Read the request payload
                         if (contentLength > 0) {
@@ -107,8 +121,10 @@ public class Server {
 
                         // Parse the payload and add it to the JSON array
                         String payload = payloadBuilder.toString();
+
                         JSONParser parser = new JSONParser();
                         JSONArray jsonArray = (JSONArray) parser.parse(new FileReader(filepath));
+
                         JSONObject jsonObject = (JSONObject) parser.parse(payload);
                         jsonArray.add(jsonObject);
 
@@ -122,6 +138,8 @@ public class Server {
                         bufferedWriter.write("Content-Length: 0\r\n");
                         bufferedWriter.write("Connection: keep-alive\r\n");
                         bufferedWriter.write("\r\n");
+
+                        System.out.println("POST request successfully completed!");
                     }
                     // Handle unsupported requests
                     else {
@@ -149,6 +167,14 @@ public class Server {
             } catch (Exception e) {
                 System.out.println(e);
             }
+        }
+    }
+
+    public static String decodeValue(String value) {
+        try {
+            return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            throw new RuntimeException(ex.getCause());
         }
     }
 }

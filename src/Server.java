@@ -83,22 +83,23 @@ public class Server {
 
                             String title = requestLine.split("title=", 2)[1].split(" ", 2)[0];
 
-                            String decodeedTitle = decodeValue(title);
+                            String decodedTitle = decodeValue(title);
 
-                            System.out.println("sout title: " + title);
-                            System.out.println("sout decoded title: " + decodeedTitle);
+//                            ------ Test soutar ------
+//                            System.out.println("sout title: " + title);
+//                            System.out.println("sout decoded title: " + decodedTitle);
 
                             JSONArray filteredArray = new JSONArray();
                             for (Object obj : jsonArray) {
                                 JSONObject jsonObject = (JSONObject) obj;
-                                if (decodeedTitle.equalsIgnoreCase((String) jsonObject.get("title"))) {
+                                if (decodedTitle.equalsIgnoreCase((String) jsonObject.get("title"))) {
                                     filteredArray.add(jsonObject);
                                 }
                             }
                             jsonArray = filteredArray;
                         }
 
-                        // Prepare and send the response
+                        // Prepare and send the GET response
                         String response = jsonArray.toJSONString();
                         System.out.println(response);
                         bufferedWriter.write("HTTP/1.1 200 OK\r\n");
@@ -159,11 +160,8 @@ public class Server {
                 }
 
                 // Close all resources
-                socket.close();
-                inputStreamReader.close();
-                outputStreamWriter.close();
-                bufferedReader.close();
-                bufferedWriter.close();
+                closeAll(socket, inputStreamReader, outputStreamWriter, bufferedReader, bufferedWriter);
+
             } catch (Exception e) {
                 System.out.println(e);
             }
@@ -175,6 +173,24 @@ public class Server {
             return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
         } catch (UnsupportedEncodingException ex) {
             throw new RuntimeException(ex.getCause());
+        }
+    }
+
+    private static void closeAll(Socket socket, InputStreamReader inputStreamReader, OutputStreamWriter outputStreamWriter, BufferedReader bufferedReader, BufferedWriter bufferedWriter) throws IOException {
+        if (socket != null) {
+            socket.close();
+        }
+        if (inputStreamReader != null) {
+            inputStreamReader.close();
+        }
+        if (outputStreamWriter != null) {
+            outputStreamWriter.close();
+        }
+        if (bufferedReader != null) {
+            bufferedReader.close();
+        }
+        if (bufferedWriter != null) {
+            bufferedWriter.close();
         }
     }
 }

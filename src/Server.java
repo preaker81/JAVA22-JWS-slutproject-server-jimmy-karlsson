@@ -85,10 +85,6 @@ public class Server {
 
                             String decodedTitle = decodeValue(title);
 
-//                            ------ Test soutar ------
-//                            System.out.println("sout title: " + title);
-//                            System.out.println("sout decoded title: " + decodedTitle);
-
                             JSONArray filteredArray = new JSONArray();
                             for (Object obj : jsonArray) {
                                 JSONObject jsonObject = (JSONObject) obj;
@@ -136,7 +132,7 @@ public class Server {
 
                         // Prepare and send the response
                         bufferedWriter.write("HTTP/1.1 201 Created\r\n");
-                        bufferedWriter.write("Content-Length: 0\r\n");
+                        bufferedWriter.write("Content-Length: 4\r\n");
                         bufferedWriter.write("Connection: keep-alive\r\n");
                         bufferedWriter.write("\r\n");
 

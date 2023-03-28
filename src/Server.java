@@ -164,6 +164,7 @@ public class Server {
         }
     }
 
+    // Function - Decode the given value using URL encoding with UTF-8
     public static String decodeValue(String value) {
         try {
             return URLDecoder.decode(value, StandardCharsets.UTF_8.toString());
@@ -172,6 +173,7 @@ public class Server {
         }
     }
 
+    // Function - Close all resources
     private static void closeAll(Socket socket, InputStreamReader inputStreamReader, OutputStreamWriter outputStreamWriter, BufferedReader bufferedReader, BufferedWriter bufferedWriter) throws IOException {
         if (socket != null) {
             socket.close();
